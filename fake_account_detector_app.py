@@ -21,6 +21,13 @@ import xgboost as xgb
 import praw
 import tweepy
 
+# ---------- Page config MUST be first Streamlit call ----------
+st.set_page_config(
+    page_title="Fake Account Detector - Inference GUI",
+    layout="wide",
+    initial_sidebar_state="expanded"
+)
+
 # ---------- Minimal CSS tuned to avoid overlaps ----------
 def local_css(css: str):
     st.markdown(f"<style>{css}</style>", unsafe_allow_html=True)
@@ -87,8 +94,7 @@ textarea, input[type="text"], input[type="number"] {
 
 local_css(CUSTOM_CSS)
 
-# ---------- Page ----------
-st.set_page_config(page_title="Fake Account Detector - Inference GUI", layout="wide", initial_sidebar_state="expanded")
+# ---------- Page title ----------
 st.title("Fake Account Detector - Inference GUI")
 st.write("Welcome. Select a mode and provide input to analyze an account or paste text.")
 
