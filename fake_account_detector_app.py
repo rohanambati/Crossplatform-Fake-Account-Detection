@@ -97,7 +97,7 @@ logging.basicConfig(level=logging.INFO)
 log = logging.getLogger(__name__)
 
 # ---------- Paths & device ----------
-OUTPUT_PATH = '/content/drive/MyDrive/Capstone Project New/models/'
+OUTPUT_PATH = os.path.join(os.path.dirname(__file__), 'models')
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
 # ---------- API credentials (placeholders preserved) ----------
