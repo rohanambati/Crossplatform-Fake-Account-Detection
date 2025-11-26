@@ -110,7 +110,7 @@ device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 REDDIT_CLIENT_ID = os.environ.get("REDDIT_CLIENT_ID") or 'JRNjjalIhYOQ3JR7AjFmkA'
 REDDIT_CLIENT_SECRET = os.environ.get("REDDIT_CLIENT_SECRET") or 'k2IyGQ9OOA-6vNcp58jGSmn3KpQ4Uw'
 REDDIT_USER_AGENT = os.environ.get("REDDIT_USER_AGENT") or 'fake_account_detector/1.0 by Winter_Lingonberry60'
-TWITTER_BEARER_TOKEN = os.environ.get("TWITTER_BEARER_TOKEN") or "AAAAAAAAAAAAAAAAAAAAAOli4AEAAAAAM38OxA6vo2D8m2p7poBCA6kTnuY%3D4vEKut29Do1H1jCyaddqZdvrcTkzAM0fWpnGAKPR4t4keSeksS"
+TWITTER_BEARER_TOKEN = os.environ.get("TWITTER_BEARER_TOKEN") or "AAAAAAAAAAAAAAAAAAAAAFeU5gEAAAAAyCqrRRZxkRYqikT8cKaV%2Bo9PlKI%3DVhwbkaEmNgYqs3oOWAWfODhGKKn08Vt7YOaa4Ri33dA7abgfpQ"
 
 # ---------- Model architecture (unchanged) ----------
 class CNN(nn.Module):
