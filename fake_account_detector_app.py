@@ -174,13 +174,20 @@ def load_cnn_model():
 
 @st.cache_resource(show_spinner=False)
 def load_xgb_model():
-    model = xgb.XGBClassifier()
     path = os.path.join(OUTPUT_PATH, 'xgb_model_tuned.json')
     if os.path.exists(path):
-        model.load_model(path)
+        # Load as native Booster first, then wrap in XGBClassifier
+        # This avoids type mismatch errors when loading JSON models
+        booster = xgb.Booster()
+        booster.load_model(path)
+        # Create XGBClassifier and set the booster
+        model = xgb.XGBClassifier()
+        model._Booster = booster
+        return model
     else:
         st.warning(f"XGBoost model file not found at {path}. Predictions will not work until model is available.")
-    return model
+        # Return a dummy model to prevent crashes
+        return xgb.XGBClassifier()
 
 @st.cache_resource(show_spinner=False)
 def load_reddit_client(client_id, client_secret, user_agent):

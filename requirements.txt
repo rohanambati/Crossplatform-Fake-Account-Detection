@@ -3,7 +3,7 @@ numpy
 pandas
 transformers
 torch
-xgboost
+xgboost>=1.7.0,<3.0.0
 praw
 tweepy
 scikit-learn
