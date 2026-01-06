@@ -180,9 +180,17 @@ def load_xgb_model():
         # This avoids type mismatch errors when loading JSON models
         booster = xgb.Booster()
         booster.load_model(path)
+        
         # Create XGBClassifier and set the booster
         model = xgb.XGBClassifier()
         model._Booster = booster
+        
+        # Manually set required attributes for predict_proba to work
+        # These are normally set during fit() but we're loading a pre-trained model
+        model.n_classes_ = 2  # Binary classification: legitimate (0) vs fake (1)
+        model.classes_ = np.array([0, 1])
+        model.objective = "binary:logistic"  # Standard binary classification objective
+        
         return model
     else:
         st.warning(f"XGBoost model file not found at {path}. Predictions will not work until model is available.")
