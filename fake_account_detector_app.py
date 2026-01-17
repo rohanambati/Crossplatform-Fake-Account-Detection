@@ -187,8 +187,10 @@ def load_xgb_model():
         
         # Manually set required attributes for predict_proba to work
         # These are normally set during fit() but we're loading a pre-trained model
+        # Use object.__setattr__ to bypass the read-only property in XGBoost 2.1.4+
         model.n_classes_ = 2  # Binary classification: legitimate (0) vs fake (1)
-        model.classes_ = np.array([0, 1])
+        object.__setattr__(model, 'classes_', np.array([0, 1]))
+        object.__setattr__(model, '_le', None)  # LabelEncoder, set to None for binary
         model.objective = "binary:logistic"  # Standard binary classification objective
         
         return model
