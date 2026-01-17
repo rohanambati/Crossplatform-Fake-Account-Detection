@@ -130,6 +130,47 @@ class CNN(nn.Module):
         x = self.fc(x)
         return x
 
+# ---------- Custom XGBoost wrapper to avoid property restrictions ----------
+class XGBoostWrapper:
+    """
+    Wrapper for XGBoost Booster that provides predict_proba interface.
+    This bypasses the read-only property issues in XGBoost 2.1.4+.
+    """
+    def __init__(self, booster):
+        self.booster = booster
+        self.n_classes_ = 2
+        self.classes_ = np.array([0, 1])
+    
+    def predict_proba(self, X):
+        """
+        Predict class probabilities for binary classification.
+        Returns array of shape (n_samples, 2) with [prob_class_0, prob_class_1].
+        """
+        # Convert to DMatrix if needed
+        if not isinstance(X, xgb.DMatrix):
+            dmatrix = xgb.DMatrix(X)
+        else:
+            dmatrix = X
+        
+        # Get prediction (probability of positive class)
+        pred = self.booster.predict(dmatrix)
+        
+        # For binary classification, booster returns prob of positive class
+        # We need to return [prob_negative, prob_positive] for each sample
+        if len(pred.shape) == 1:
+            # Single dimension output - binary classification
+            prob_positive = pred.reshape(-1, 1)
+            prob_negative = 1 - prob_positive
+            return np.hstack([prob_negative, prob_positive])
+        else:
+            # Already in the right format
+            return pred
+    
+    def predict(self, X):
+        """Predict class labels."""
+        proba = self.predict_proba(X)
+        return np.argmax(proba, axis=1)
+
 # ---------- BERT helper (robust to empty) ----------
 def get_bert_embeddings(texts, tokenizer, bert_model, device, batch_size=16):
     if isinstance(texts, str):
@@ -174,30 +215,23 @@ def load_cnn_model():
 
 @st.cache_resource(show_spinner=False)
 def load_xgb_model():
+    """
+    Load XGBoost model from JSON file and wrap it in a custom wrapper.
+    This approach avoids the read-only property issues in XGBoost 2.1.4+.
+    """
     path = os.path.join(OUTPUT_PATH, 'xgb_model_tuned.json')
     if os.path.exists(path):
-        # Load as native Booster first, then wrap in XGBClassifier
-        # This avoids type mismatch errors when loading JSON models
+        # Load as native Booster
         booster = xgb.Booster()
         booster.load_model(path)
         
-        # Create XGBClassifier and set the booster
-        model = xgb.XGBClassifier()
-        model._Booster = booster
-        
-        # Manually set required attributes for predict_proba to work
-        # These are normally set during fit() but we're loading a pre-trained model
-        # Use object.__setattr__ to bypass the read-only property in XGBoost 2.1.4+
-        model.n_classes_ = 2  # Binary classification: legitimate (0) vs fake (1)
-        object.__setattr__(model, 'classes_', np.array([0, 1]))
-        object.__setattr__(model, '_le', None)  # LabelEncoder, set to None for binary
-        model.objective = "binary:logistic"  # Standard binary classification objective
-        
-        return model
+        # Wrap in our custom class that provides predict_proba
+        return XGBoostWrapper(booster)
     else:
         st.warning(f"XGBoost model file not found at {path}. Predictions will not work until model is available.")
-        # Return a dummy model to prevent crashes
-        return xgb.XGBClassifier()
+        # Return a dummy wrapper
+        dummy_booster = xgb.Booster()
+        return XGBoostWrapper(dummy_booster)
 
 @st.cache_resource(show_spinner=False)
 def load_reddit_client(client_id, client_secret, user_agent):
